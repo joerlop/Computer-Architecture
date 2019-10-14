@@ -11,6 +11,9 @@ class CPU:
         self.register = [0] * 8
         self.ram = [0] * 256
         self.pc = 0
+        self.HLT = 0b00000001
+        self.LDI = 0b10000010
+        self.PRN = 0b01000111
 
     def load(self):
         """Load a program into memory."""
@@ -62,13 +65,31 @@ class CPU:
         )
 
         for i in range(8):
-            print(" %02X" % self.reg[i], end="")
+            print(" %02X" % self.register[i], end="")
 
         print()
 
     def run(self):
         """Run the CPU."""
-        pass
+
+        running = True
+
+        while running:
+            ir = self.ram_read(self.pc)
+            operand_a = self.ram_read(self.pc + 1)
+            operand_b = self.ram_read(self.pc + 2)
+
+            if ir == self.HLT:
+                running = False
+                break
+
+            elif ir == self.LDI:
+                self.register[operand_a] = operand_b
+                self.pc += 3
+
+            elif ir == self.PRN:
+                print(self.register[operand_a])
+                self.pc += 2
 
     def ram_read(self, address):
         return self.ram[address]
