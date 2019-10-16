@@ -15,6 +15,10 @@ class CPU:
         self.LDI = 0b10000010
         self.PRN = 0b01000111
         self.MUL = 0b10100010
+        self.PUSH = 0b01000101
+        self.POP = 0b01000110
+
+        self.SPL = 7  # Stack Pointer location in the register
 
     def load(self):
         """Load a program into memory."""
@@ -25,8 +29,8 @@ class CPU:
         try:
             with open(sys.argv[1]) as ff:
                 lines = ff.readlines()
-                program = []
 
+                program = []
                 for line in lines:
                     if line[0] in "01":
                         new_line = int(line[:8], 2)
@@ -97,10 +101,26 @@ class CPU:
                 self.pc += 2
 
             elif ir == self.MUL:
-                self.register[operand_a] = (
-                    self.register[operand_a] * self.register[operand_b]
-                )
+                self.register[operand_a] *= self.register[operand_b]
                 self.pc += 3
+
+            elif ir == self.PUSH:
+                self.register[self.SPL] -= 1  # Decrement stack position by 1
+                reg = self.ram_read(self.pc + 1)  # Get value from register
+                val = self.register[reg]  # Get value from register
+
+                self.ram_write(val, self.register[self.SPL])
+
+                self.pc += 2
+
+            elif ir == self.POP:
+                val = self.ram[self.register[self.SPL]]  # Get value from SP
+                reg = self.ram_read(self.pc + 1)  # Get register
+                self.register[reg] = val  # Copy value to register
+
+                self.register[self.SPL] += 1  # Modify SP
+
+                self.pc += 2
 
     def ram_read(self, address):
         return self.ram[address]
