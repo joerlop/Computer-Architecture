@@ -16,24 +16,30 @@ class CPU:
         self.PRN = 0b01000111
         self.MUL = 0b10100010
 
-    def load(self, filename):
+    def load(self):
         """Load a program into memory."""
 
-        address = 0
+        if len(sys.argv) != 2:
+            print("usage: file.py <filename>", file=sys.stderr)
 
-        ff = open(f"./examples/{filename}")
+        try:
+            with open(sys.argv[1]) as ff:
+                lines = ff.readlines()
+                program = []
 
-        lines = ff.readlines()
+                for line in lines:
+                    if line[0] in "01":
+                        new_line = int(line[:8], 2)
+                        program.append(new_line)
 
-        program = []
+            address = 0
+            for instruction in program:
+                self.ram[address] = instruction
+                address += 1
 
-        for line in lines:
-            new_line = int(line[:8], 2)
-            program.append(new_line)
-
-        for instruction in program:
-            self.ram[address] = instruction
-            address += 1
+        except FileNotFoundError:
+            print(f"{sys.argv[0]}: {sys.argv[1]} not found")
+            sys.exit(2)
 
     def alu(self, op, reg_a, reg_b):
         """ALU operations."""
