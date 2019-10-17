@@ -19,6 +19,9 @@ class CPU:
         self.MUL = 0b10100010
         self.PUSH = 0b01000101
         self.POP = 0b01000110
+        self.CALL = 0b01010000
+        self.ADD = 0b10100000
+        self.RET = 0b00010001
 
         self.SPL = 7  # Stack Pointer location in the register
 
@@ -29,6 +32,9 @@ class CPU:
         self.branchtable[self.MUL] = self.handle_mul
         self.branchtable[self.PUSH] = self.handle_push
         self.branchtable[self.POP] = self.handle_pop
+        self.branchtable[self.CALL] = self.handle_call
+        self.branchtable[self.RET] = self.handle_ret
+        self.branchtable[self.ADD] = self.handle_add
 
     def load(self):
         """Load a program into memory."""
@@ -140,4 +146,31 @@ class CPU:
         self.register[self.SPL] += 1  # Modify SP
 
         self.pc += 2
+
+    def handle_call(self):
+        next_instruction = self.pc + 2  # Next instruction address
+
+        self.register[self.SPL] -= 1
+        self.ram_write(next_instruction, self.register[self.SPL])
+
+        reg = self.ram_read(self.pc + 1)  # Get register
+        self.pc = self.register[reg]
+
+        # ir = self.ram_read(self.pc)
+        # print(f"ir: {ir}")
+        # self.branchtable[ir]()  # Execute instruction at given pc
+
+        # self.pc = next_instruction
+
+    def handle_ret(self):
+        self.pc = self.ram_read(self.register[self.SPL])
+        self.register[self.SPL] += 1
+
+    def handle_add(self):
+        reg_a = self.ram_read(self.pc + 1)
+        reg_b = self.ram_read(self.pc + 2)
+
+        self.register[reg_a] += self.register[reg_b]
+
+        self.pc += 3
 
